@@ -1,0 +1,133 @@
+/* Estilos para el modal del carrito */
+.cart-modal {
+  font-family: 'Poppins', sans-serif;
+  z-index: 1050;
+}
+
+.cart-modal .modal-content {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.cart-items-container {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 8px;
+  margin-right: -8px;
+}
+
+.cart-item {
+  background-color: #f9f9f9;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.cart-item:hover {
+  background-color: #f1f1f1;
+  transform: translateY(-2px);
+}
+
+.cart-item-img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  background: #f8f9fa;
+  border-radius: 20px;
+  padding: 2px;
+}
+
+.quantity-controls button {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.quantity-controls button:hover {
+  background: #e9ecef;
+}
+
+.quantity-input {
+  min-width: 30px;
+  text-align: center;
+  font-weight: 500;
+  margin: 0 5px;
+}
+
+.cart-summary {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.empty-cart-icon {
+  opacity: 0.5;
+  margin-bottom: 1rem;
+  color: #6c757d;
+}
+
+/* Scrollbar personalizada */
+.cart-items-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cart-items-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.cart-items-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.cart-items-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .cart-modal .modal-dialog {
+    margin: 10px auto;
+    max-width: 95%;
+  }
+  
+  .cart-item-img {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .quantity-controls button {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+@media (max-width: 576px) {
+  .cart-item {
+    padding: 12px;
+  }
+
+  .cart-item-img {
+    width: 60px;
+    height: 60px;
+  }
+
+  .quantity-controls button {
+    width: 24px;
+    height: 24px;
+  }
+}

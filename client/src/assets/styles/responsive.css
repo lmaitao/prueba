@@ -1,0 +1,42 @@
+/* Pantallas pequeñas (móviles) */
+@media (max-width: 767.98px) {
+  .glass-modal {
+    margin: 0 !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+  }
+
+  .cart-modal-body {
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .cart-item {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cart-item-img {
+    width: 60px !important;
+    height: 60px !important;
+  }
+}
+
+/* Pantallas medianas (tablets) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .glass-modal {
+    max-width: 90vw !important;
+  }
+}
+
+/* Ajustes para el navbar en móviles */
+@media (max-width: 575.98px) {
+  .navbar-brand {
+    font-size: 1.2rem;
+  }
+  
+  .navbar-toggler {
+    padding: 0.25rem 0.5rem;
+  }
+}

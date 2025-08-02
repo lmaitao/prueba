@@ -1,0 +1,102 @@
+.menu-page {
+  padding-top: 80px;
+  background-color: #fff;
+}
+
+.menu-title {
+  color: #1a1a2e;
+  font-weight: 700;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.menu-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background-color: #e94560;
+}
+
+/* Estilos para las pestañas */
+.custom-tabs {
+  border-bottom: 2px solid #e0e0e0;
+  justify-content: center;
+}
+
+.custom-tab {
+  color: #1a1a2e !important; /* Color oscuro para el texto */
+  background-color: transparent !important;
+  border: none !important;
+  font-weight: 600;
+  padding: 12px 24px !important;
+  margin: 0 5px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.custom-tab:hover {
+  color: #e94560 !important;
+}
+
+.nav-tabs .nav-item.show .nav-link, 
+.nav-tabs .nav-link.active {
+  color: #e94560 !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+
+/* Indicador activo */
+.custom-tab::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: #e94560;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.nav-tabs .nav-link.active::after {
+  transform: scaleX(1) !important;
+}
+
+.custom-tab:hover::after {
+  transform: scaleX(1);
+  background-color: rgba(233, 69, 96, 0.5);
+}
+
+/* Contenido de las pestañas */
+.tab-content {
+  padding: 20px 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .custom-tab {
+    padding: 8px 12px !important;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .custom-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding-bottom: 5px;
+  }
+  
+  .custom-tab {
+    white-space: nowrap;
+  }
+  
+  .menu-title {
+    font-size: 1.8rem;
+  }
+}
