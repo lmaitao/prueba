@@ -15,13 +15,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setLoading(false);
-          return;
-        }
-        
-        setAuthToken(token);
+        setLoading(true);
         const userData = await getCurrentUser();
         
         const userWithRole = {
@@ -41,17 +35,10 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
-  useEffect(() => {
-    if (!loading && user) {
-      const destination = user.isAdmin ? '/admin/dashboard' : '/profile';
-      navigate(destination, { replace: true });
-    }
-  }, [user, loading, navigate]);
-
   const login = async (email, password) => {
     setAuthLoading(true);
     try {
-      const { token, user: userData } = await loginService(email, password);
+      const { token, user: userData } = await loginService({ email, password });
       
       const authenticatedUser = {
         ...userData,
@@ -60,6 +47,9 @@ export const AuthProvider = ({ children }) => {
 
       setAuthToken(token);
       setUser(authenticatedUser);
+      
+      // Redirigir después de login exitoso
+      navigate(authenticatedUser.isAdmin ? '/admin/dashboard' : '/profile', { replace: true });
       
       return authenticatedUser;
     } catch (error) {
@@ -109,7 +99,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

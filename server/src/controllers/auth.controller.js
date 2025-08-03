@@ -41,14 +41,19 @@ export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
+    // Validación básica
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email y contraseña son requeridos' });
+    }
+
     const user = await User.findByEmail(email);
     if (!user) {
-      return res.status(400).json({ message: 'User not found' });
+      return res.status(400).json({ message: 'Usuario no encontrado' });
     }
 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Credenciales inválidas' });
     }
 
     const token = jwt.sign(
@@ -57,17 +62,23 @@ export const login = async (req, res, next) => {
       { expiresIn: '1d' }
     );
 
+    // Enviar token en respuesta JSON y como cookie
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict'
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000 // 1 día
     });
 
     res.json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar
+      }
     });
   } catch (error) {
     next(error);

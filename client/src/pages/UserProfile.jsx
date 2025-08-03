@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Swal from "sweetalert2";
 import { FaUser, FaSave, FaHome, FaTrash, FaLock } from "react-icons/fa";
-import api from "../api";
+import api from "../api/api";
 
 const UserProfile = () => {
   const { user, logout } = useAuth();
