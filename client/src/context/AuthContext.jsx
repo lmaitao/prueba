@@ -1,12 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { 
-  login as loginService, 
-  register as registerService, 
-  logout as logoutService, 
-  getCurrentUser 
-} from '../api/auth';
-import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
+import { login as loginService, logout as logoutService, getCurrentUser } from '../api/auth';
+import Swal from 'sweetalert2';
+import { setAuthToken, clearAuthToken } from '../api/api';
 
 const AuthContext = createContext();
 
@@ -16,18 +12,26 @@ export const AuthProvider = ({ children }) => {
   const [authLoading, setAuthLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Cargar usuario al iniciar
   useEffect(() => {
     const loadUser = async () => {
       try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+        
+        setAuthToken(token);
         const userData = await getCurrentUser();
+        
         const userWithRole = {
           ...userData,
           isAdmin: userData?.role === 'admin'
         };
+        
         setUser(userWithRole);
       } catch (error) {
-        console.error('Error loading user:', error);
+        clearAuthToken();
         setUser(null);
       } finally {
         setLoading(false);
@@ -37,10 +41,9 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
-  // Efecto para redirección cuando el usuario cambia
   useEffect(() => {
-    if (user && !loading) {
-      const destination = user.isAdmin ? '/admin' : '/';
+    if (!loading && user) {
+      const destination = user.isAdmin ? '/admin/dashboard' : '/profile';
       navigate(destination, { replace: true });
     }
   }, [user, loading, navigate]);
@@ -48,29 +51,15 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     setAuthLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        throw new Error('Credenciales incorrectas');
-      }
-
-      const data = await response.json();
+      const { token, user: userData } = await loginService(email, password);
       
       const authenticatedUser = {
-        id: data?.id || data?.user?.id || null,
-        name: data?.name || data?.user?.name || 'Usuario',
-        email: data?.email || data?.user?.email || email,
-        role: data?.role || data?.user?.role || 'customer',
-        isAdmin: (data?.role || data?.user?.role) === 'admin'
+        ...userData,
+        isAdmin: userData.role === 'admin'
       };
 
+      setAuthToken(token);
       setUser(authenticatedUser);
-      localStorage.setItem('user', JSON.stringify(authenticatedUser));
       
       return authenticatedUser;
     } catch (error) {
@@ -87,57 +76,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (email, password, name) => {
-    setAuthLoading(true);
-    try {
-      const { user: userData } = await registerService({ 
-        email, 
-        password,
-        name 
-      });
-
-      const newUser = {
-        ...userData,
-        isAdmin: false
-      };
-
-      setUser(newUser);
-      localStorage.setItem('user', JSON.stringify(newUser));
-
-      Swal.fire({
-        title: '¡Registro exitoso!',
-        text: `Bienvenido ${name}`,
-        icon: 'success',
-        confirmButtonText: 'Continuar',
-      });
-
-      return newUser;
-    } catch (error) {
-      let errorMessage = 'Error al registrar usuario';
-      
-      if (error.message.includes('email-already-in-use')) {
-        errorMessage = 'Este correo ya está registrado';
-      } else if (error.message.includes('weak-password')) {
-        errorMessage = 'La contraseña es demasiado débil';
-      }
-
-      Swal.fire({
-        title: 'Error',
-        text: errorMessage,
-        icon: 'error',
-        confirmButtonText: 'Ok',
-      });
-      throw error;
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
   const logout = async () => {
     try {
       await logoutService();
+      clearAuthToken();
       setUser(null);
-      localStorage.removeItem('user');
       Swal.fire({
         title: 'Sesión cerrada',
         text: 'Has cerrado sesión correctamente',
@@ -161,7 +104,6 @@ export const AuthProvider = ({ children }) => {
     loading,
     authLoading,
     login,
-    register,
     logout
   };
 
@@ -179,5 +121,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-export default AuthContext;

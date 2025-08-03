@@ -2,14 +2,22 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import LoadingSpinner from "./LoadingSpinner";
 
-const PrivateRoute = () => {
-  const { user } = useAuth();
+const PrivateRoute = ({ adminOnly = false }) => {
+  const { user, loading } = useAuth();
 
-  if (user === undefined) {
+  if (loading) {
     return <LoadingSpinner />;
   }
 
-  return user ? <Outlet /> : <Navigate to="/login" />;
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (adminOnly && !user.isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
 };
 
 export default PrivateRoute;
