@@ -66,5 +66,6 @@ function App() {
   </ErrorBoundary>
   );
 }
+window.startTime = Date.now();
 
 export default App;

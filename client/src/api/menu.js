@@ -40,30 +40,32 @@ export const getMenuItemById = async (id) => {
 
 export const getMenuItemsByCategory = async (category) => {
   try {
-    const response = await fetch(`${apiConfig.baseURL}/menu/category/${category}`, {
-      credentials: 'include',
-      headers: apiConfig.headers,
+    const response = await fetch(`http://localhost:3000/api/menu/category/${category}`, {
+      credentials: 'include'
     });
-
+    
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || `Error al obtener ítems de ${category}`);
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Respuesta no es JSON');
+    }
+
+    const result = await response.json();
     
-    // Asegurar estructura consistente
-    return data.map(item => ({
-      id: item.id,
-      name: item.name,
-      description: item.description,
-      price: item.price,
-      category: item.category,
-      image_url: item.image_url || '/images/default-food.jpg'
-    }));
+    // Validación profunda de la estructura de datos
+    if (!result || typeof result !== 'object') {
+      throw new Error('Respuesta inválida');
+    }
+
+    return Array.isArray(result.data) ? 
+      result.data.filter(item => item && typeof item === 'object') : 
+      [];
   } catch (error) {
     console.error(`Error fetching ${category} items:`, error);
-    throw error;
+    return [];
   }
 };
 

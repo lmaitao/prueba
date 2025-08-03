@@ -3,6 +3,7 @@ import { Container, Row, Col, Tabs, Tab, Spinner, Alert } from "react-bootstrap"
 import ProductCard from "../components/ProductCard";
 import { getMenuItemsByCategory } from "../api/menu";
 import { useCart } from "../context/CartContext";
+import ErrorBoundary from "../components/ErrorBoundary";
 import "../assets/styles/menu.css";
 
 const Menu = () => {
@@ -20,31 +21,52 @@ const Menu = () => {
   ];
 
   useEffect(() => {
+    let isMounted = true;
+    
     const loadProducts = async () => {
       try {
         setLoading(true);
-        const data = await getMenuItemsByCategory(activeKey);
-        setProducts(data);
+        setError("");
+        const items = await getMenuItemsByCategory(activeKey);
+        
+        if (isMounted) {
+          setProducts(items);
+        }
       } catch (err) {
         console.error("Error loading menu:", err);
-        setError(err.message || "Error al cargar el menú");
+        if (isMounted) {
+          setError(err.message || "Error al cargar el menú");
+          setProducts([]);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadProducts();
+
+    return () => {
+      isMounted = false;
+    };
   }, [activeKey]);
 
   const handleAddToCart = (product) => {
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image_url: product.image_url,
-      category: product.category,
-      description: product.description
-    });
+    try {
+      if (!product || !product.id) return;
+      
+      addToCart({
+        id: product.id,
+        name: product.name || "Producto sin nombre",
+        price: Number(product.price) || 0,
+        image_url: product.image_url || product.image || "",
+        category: product.category || "general",
+        description: product.description || ""
+      });
+    } catch (err) {
+      console.error("Error adding to cart:", err);
+    }
   };
 
   return (
@@ -82,11 +104,13 @@ const Menu = () => {
         <Row className="g-4">
           {products.length > 0 ? (
             products.map((product) => (
-              <Col key={product.id} xs={12} sm={6} md={4} lg={3}>
-                <ProductCard 
-                  product={product} 
-                  onAddToCart={() => handleAddToCart(product)} 
-                />
+              <Col key={product.id || `product-${Date.now()}`} xs={12} sm={6} md={4} lg={3}>
+                <ErrorBoundary>
+                  <ProductCard 
+                    product={product} 
+                    onAddToCart={() => handleAddToCart(product)} 
+                  />
+                </ErrorBoundary>
               </Col>
             ))
           ) : (

@@ -1,136 +1,88 @@
 import MenuItem from '../models/MenuItem.js';
 
-const getAllMenuItems = async (req, res) => {
+export const getAllMenuItems = async (req, res, next) => {
   try {
     const items = await MenuItem.getAll();
-    res.json({
-      success: true,
-      count: items.length,
-      data: items
-    });
+    res.json(items);
   } catch (error) {
-    console.error('Error en getAllMenuItems:', error.message);
-    res.status(500).json({
-      success: false,
-      message: 'Error al obtener el menú',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    next(error);
   }
 };
 
-const getMenuItemById = async (req, res) => {
+export const getMenuItemById = async (req, res, next) => {
   try {
     const item = await MenuItem.getById(req.params.id);
     if (!item) {
-      return res.status(404).json({
+      return res.status(404).json({ message: 'Menu item not found' });
+    }
+    res.json(item);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMenuItemsByCategory = async (req, res) => {
+  try {
+    const { category } = req.params;
+    const validCategories = ['sushi', 'ramen', 'bebidas', 'postres'];
+    
+    if (!validCategories.includes(category.toLowerCase())) {
+      return res.status(400).json({ 
         success: false,
-        message: 'Item no encontrado'
+        message: 'Categoría no válida',
+        data: [] // Siempre devolver un array
       });
     }
+
+    const items = await MenuItem.getByCategory(category);
+    
+    // Asegurar que items sea un array
+    const result = Array.isArray(items) ? items : [];
+    
     res.json({
       success: true,
-      data: item
+      count: result.length,
+      data: result
     });
   } catch (error) {
-    console.error('Error en getMenuItemById:', error.message);
-    res.status(500).json({
+    console.error('Error:', error);
+    res.status(500).json({ 
       success: false,
-      message: 'Error al obtener el item',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: 'Error al obtener ítems del menú',
+      data: [] // Devolver array vacío en caso de error
     });
   }
 };
 
-const getMenuItemsByCategory = async (req, res) => {
-  try {
-    const items = await MenuItem.getByCategory(req.params.category);
-    res.json({
-      success: true,
-      count: items.length,
-      category: req.params.category,
-      data: items
-    });
-  } catch (error) {
-    console.error('Error en getMenuItemsByCategory:', error.message);
-    res.status(500).json({
-      success: false,
-      message: 'Error al obtener items por categoría',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-};
-
-const createMenuItem = async (req, res) => {
+export const createMenuItem = async (req, res, next) => {
   try {
     const newItem = await MenuItem.create(req.body);
-    res.status(201).json({
-      success: true,
-      message: 'Item creado exitosamente',
-      data: newItem
-    });
+    res.status(201).json(newItem);
   } catch (error) {
-    console.error('Error en createMenuItem:', error.message);
-    res.status(500).json({
-      success: false,
-      message: 'Error al crear el item',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    next(error);
   }
 };
 
-const updateMenuItem = async (req, res) => {
+export const updateMenuItem = async (req, res, next) => {
   try {
     const updatedItem = await MenuItem.update(req.params.id, req.body);
     if (!updatedItem) {
-      return res.status(404).json({
-        success: false,
-        message: 'Item no encontrado'
-      });
+      return res.status(404).json({ message: 'Menu item not found' });
     }
-    res.json({
-      success: true,
-      message: 'Item actualizado exitosamente',
-      data: updatedItem
-    });
+    res.json(updatedItem);
   } catch (error) {
-    console.error('Error en updateMenuItem:', error.message);
-    res.status(500).json({
-      success: false,
-      message: 'Error al actualizar el item',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    next(error);
   }
 };
 
-const deleteMenuItem = async (req, res) => {
+export const deleteMenuItem = async (req, res, next) => {
   try {
     const deletedItem = await MenuItem.delete(req.params.id);
     if (!deletedItem) {
-      return res.status(404).json({
-        success: false,
-        message: 'Item no encontrado'
-      });
+      return res.status(404).json({ message: 'Menu item not found' });
     }
-    res.json({
-      success: true,
-      message: 'Item eliminado exitosamente',
-      data: deletedItem
-    });
+    res.json({ message: 'Menu item deleted successfully' });
   } catch (error) {
-    console.error('Error en deleteMenuItem:', error.message);
-    res.status(500).json({
-      success: false,
-      message: 'Error al eliminar el item',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    next(error);
   }
-};
-
-export {
-  getAllMenuItems,
-  getMenuItemById,
-  getMenuItemsByCategory,
-  createMenuItem,
-  updateMenuItem,
-  deleteMenuItem
 };

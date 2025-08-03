@@ -1,58 +1,97 @@
 import User from '../models/User.js';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { jwtSecret } from '../../config/jwt.js';
 
-export const register = async (req, res) => {
+export const register = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
 
-    // Validación básica
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: 'Todos los campos son requeridos' });
-    }
-
-    // Verificar si el usuario ya existe
-    const existingUser = await User.findOne({ where: { email } });
+    const existingUser = await User.findByEmail(email);
     if (existingUser) {
-      return res.status(400).json({ error: 'El correo ya está registrado' });
+      return res.status(400).json({ message: 'Email already exists' });
     }
 
-    // Hash de la contraseña
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const newUser = await User.create({ name, email, password });
 
-    // Crear nuevo usuario
-    const newUser = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role: 'user' // Rol por defecto
-    });
-
-    // Generar token JWT
     const token = jwt.sign(
-      { userId: newUser.id, email: newUser.email, role: newUser.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { id: newUser.id, role: newUser.role },
+      jwtSecret,
+      { expiresIn: '1d' }
     );
 
-    // Respuesta exitosa
-    res.status(201).json({
-      message: 'Usuario registrado exitosamente',
-      user: {
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role
-      },
-      token
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
     });
 
-  } catch (error) {
-    console.error('Error en registro:', error);
-    res.status(500).json({ 
-      error: 'Error al registrar usuario',
-      details: process.env.NODE_ENV === 'development' ? error.message : null
+    res.status(201).json({
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findByEmail(email);
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' });
+    }
+
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      jwtSecret,
+      { expiresIn: '1d' }
+    );
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+    });
+
+    res.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const logout = (req, res) => {
+  res.clearCookie('token');
+  res.json({ message: 'Logged out successfully' });
+};
+
+export const getCurrentUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
